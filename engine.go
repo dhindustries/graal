@@ -101,6 +101,10 @@ func (engine Engine) Run(application interface{}) error {
 	return nil
 }
 
+func (engine Engine) setup() error {
+
+}
+
 func (engine Engine) log(v interface{}) {
 	if engine.Logger != nil {
 		engine.Logger.Println(v)

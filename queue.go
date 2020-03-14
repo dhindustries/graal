@@ -3,7 +3,8 @@ package graal
 import "sync"
 
 type Queue struct {
-	tasks chan func() error
+	tasks chan func()
+	done  chan bool
 	lock  sync.Mutex
 }
 
@@ -11,28 +12,60 @@ func (queue *Queue) init() {
 	queue.lock.Lock()
 	defer queue.lock.Unlock()
 	if queue.tasks == nil {
-		queue.tasks = make(chan func() error, 128)
+		queue.tasks = make(chan func(), 128)
+		queue.done = make(chan bool, 1)
 	}
 }
 
-func (queue *Queue) invoke(task func() error) {
-	task()
-}
-
 func (queue *Queue) Pull() {
-	queue.init()
-	done := false
-	for !done {
-		select {
-		case task := <-queue.tasks:
-			queue.invoke(task)
-		default:
-			done = true
+	if queue != nil {
+		queue.init()
+	loop:
+		for true {
+			select {
+			case task := <-queue.tasks:
+				task()
+			default:
+				break loop
+			}
 		}
 	}
 }
 
-func (queue *Queue) Push(task func() error) {
-	queue.init()
-	queue.tasks <- task
+func (queue *Queue) Run() {
+	if queue != nil {
+		queue.init()
+	loop:
+		for true {
+			select {
+			case task := <-queue.tasks:
+				task()
+			case done := <-queue.done:
+				break loop
+			}
+		}
+	}
+}
+
+func (queue *Queue) Break() {
+	if queue != nil {
+		queue.done <- true
+	}
+}
+
+func (queue *Queue) Push(task func()) {
+	if queue != nil {
+		queue.init()
+		queue.tasks <- task
+	} else {
+		task()
+	}
+}
+
+func (queue *Queue) Exec(task func() error) error {
+	result := make(chan bool, 1)
+	queue.Push(func() {
+		result <- task()
+	})
+	return <-result
 }

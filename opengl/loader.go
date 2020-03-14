@@ -4,6 +4,7 @@ import (
 	"github.com/dhindustries/graal"
 )
 
-type builder struct {
-	queue *graal.Queue
+type loader struct {
+	builder *builder
+	queue   *graal.Queue
 }

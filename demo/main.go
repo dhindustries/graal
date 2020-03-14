@@ -1,9 +1,11 @@
 package main
 
 import (
+	"C"
 	"log"
 	"math"
 	"os"
+	"runtime"
 
 	"github.com/dhindustries/graal"
 	"github.com/dhindustries/graal/components"
@@ -125,6 +127,9 @@ func (app *Application) Dispose() {
 }
 
 func main() {
+	C.pthread_self()
+
+	runtime.GOMAXPROCS(1)
 	engine := graal.Engine{}
 	engine.Window = glfw.NewWindow(800, 600, "App")
 	engine.Graphics = &opengl.Graphics{}

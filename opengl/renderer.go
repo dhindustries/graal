@@ -12,7 +12,7 @@ import (
 
 type renderer struct {
 	Window     graal.Window
-	builder    builder
+	builder    *builder
 	camera     graal.Camera
 	viewMatrix graal.Mat4x4
 }
