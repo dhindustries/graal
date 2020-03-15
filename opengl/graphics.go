@@ -2,7 +2,7 @@ package opengl
 
 import (
 	"fmt"
-	"runtime"
+	"log"
 
 	"github.com/dhindustries/graal"
 	"github.com/go-gl/gl/v4.3-compatibility/gl"
@@ -11,31 +11,27 @@ import (
 type Graphics struct {
 	initialized      bool
 	window           graal.Window
-	queue            graal.Queue
+	queue            *graal.Queue
 	rendererInstance *renderer
 	factoryInstance  *factory
 	builderInstance  *builder
 	loaderInstance   *loader
+	logger           *log.Logger
 }
 
 func (graphics *Graphics) Initialize(engine *graal.Engine) error {
 	if graphics.initialized {
 		return fmt.Errorf("graphics device is already initialized")
 	}
-	runtime.LockOSThread()
-	// defer runtime.UnlockOSThread()
-	if err := gl.Init(); err != nil {
+	graphics.window = engine.Window
+	graphics.queue = &engine.RenderQueue
+	if err := graphics.initOpenGL(); err != nil {
 		return err
 	}
 	graphics.initialized = true
-	graphics.window = engine.Window
-	fmt.Println(engine.ResourceManager)
 	if engine.ResourceManager != nil {
-		fmt.Println("RM found")
 		graphics.registerLoaders(engine.ResourceManager)
 	}
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.Enable(gl.TEXTURE_2D)
 	return nil
 }
 
@@ -43,14 +39,15 @@ func (graphics *Graphics) Dispose() {
 	if !graphics.initialized {
 		panic("graphics device is not initialized")
 	}
-	// runtime.LockOSThread()
-	defer runtime.UnlockOSThread()
 	graphics.initialized = false
 	graphics.window = nil
 	gl.Finish()
 }
 
 func (graphics *Graphics) Renderer() (graal.Renderer, error) {
+	if !graphics.initialized {
+		return nil, fmt.Errorf("graphics device is not initialized")
+	}
 	if graphics.rendererInstance == nil {
 		if graphics.window == nil {
 			return nil, fmt.Errorf("window is not set")
@@ -70,10 +67,23 @@ func (graphics *Graphics) Renderer() (graal.Renderer, error) {
 }
 
 func (graphics *Graphics) Factory() (graal.Factory, error) {
+	if !graphics.initialized {
+		return nil, fmt.Errorf("graphics device is not initialized")
+	}
 	if graphics.factoryInstance == nil {
 		graphics.factoryInstance = &factory{}
 	}
 	return graphics.factoryInstance, nil
+}
+
+func (graphics *Graphics) initOpenGL() error {
+	if err := gl.Init(); err != nil {
+		return err
+	}
+	graphics.log(fmt.Sprintf("Initialized OpenGl %v", gl.GetString(gl.VERSION)))
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.Enable(gl.TEXTURE_2D)
+	return nil
 }
 
 func (graphics *Graphics) registerLoaders(manager graal.ResourceManager) {
@@ -91,7 +101,7 @@ func (graphics *Graphics) loader() (*loader, error) {
 		}
 		graphics.loaderInstance = &loader{
 			builder: builder,
-			queue:   &graphics.queue,
+			queue:   graphics.queue,
 		}
 	}
 	return graphics.loaderInstance, nil
@@ -100,8 +110,14 @@ func (graphics *Graphics) loader() (*loader, error) {
 func (graphics *Graphics) builder() (*builder, error) {
 	if graphics.builderInstance == nil {
 		graphics.builderInstance = &builder{
-			queue: &graphics.queue,
+			queue: graphics.queue,
 		}
 	}
 	return graphics.builderInstance, nil
+}
+
+func (graphics *Graphics) log(v interface{}) {
+	if graphics.logger != nil {
+		graphics.logger.Println(v)
+	}
 }

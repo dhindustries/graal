@@ -1,11 +1,12 @@
 package main
 
 import (
-	"C"
+	"fmt"
 	"log"
 	"math"
 	"os"
 	"runtime"
+	"time"
 
 	"github.com/dhindustries/graal"
 	"github.com/dhindustries/graal/components"
@@ -126,10 +127,46 @@ func (app *Application) Dispose() {
 	app.actor.Shape().Dispose()
 }
 
-func main() {
-	C.pthread_self()
+func displayInfo() chan bool {
+	mb := func(v uint64) string {
+		return fmt.Sprintf("%v MB", v/1024/1024)
+	}
+	print := func() {
+		var mem runtime.MemStats
+		runtime.ReadMemStats(&mem)
+		fmt.Printf(
+			"<go routines: %v alloc: %v heap: %v sys: %v total: %s>\n",
+			runtime.NumGoroutine(),
+			mb(mem.Alloc),
+			mb(mem.HeapAlloc),
+			mb(mem.Sys),
+			mb(mem.TotalAlloc),
+		)
+	}
+	brk := make(chan bool)
+	end := make(chan bool, 1)
+	clk := time.NewTicker(5 * time.Second)
+	go func() {
+		for range brk {
+		}
+		end <- true
+	}()
+	go func() {
+	loop:
+		for {
+			select {
+			case <-clk.C:
+				print()
+			case <-brk:
+				break loop
+			}
+		}
+	}()
+	return brk
+}
 
-	runtime.GOMAXPROCS(1)
+func main() {
+	defer close(displayInfo())
 	engine := graal.Engine{}
 	engine.Window = glfw.NewWindow(800, 600, "App")
 	engine.Graphics = &opengl.Graphics{}

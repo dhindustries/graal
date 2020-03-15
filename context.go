@@ -7,13 +7,19 @@ import (
 
 type context struct {
 	Engine
-	renderer       Renderer
 	app            interface{}
-	queue          *Queue
+	renderer       Renderer
 	running, ready sync.WaitGroup
 }
 
-func (context *context) setup() error {
+func (context *context) start() error {
+	context.ready.Add(1)
+	go context.runQueue()
+	go context.runApp()
+	return context.main()
+}
+
+func (context *context) main() error {
 	context.log("Booting engine...")
 
 	if context.ResourceManager != nil {
@@ -84,6 +90,7 @@ func (context *context) setup() error {
 	if context.ResourceManager != nil {
 		context.ResourceManager.Cleanup()
 	}
+	context.Engine.RenderQueue.Break()
 
 	return nil
 }
@@ -93,11 +100,15 @@ func (context *context) initResourceManager() error {
 }
 
 func (context *context) initWindow() error {
-	return context.Window.Open()
+	return context.Engine.RenderQueue.Exec(func() error {
+		return context.Window.Open()
+	})
 }
 
 func (context *context) initGraphics() error {
-	return context.Graphics.Initialize(&context.Engine)
+	return context.Engine.RenderQueue.Exec(func() error {
+		return context.Graphics.Initialize(&context.Engine)
+	})
 }
 
 func (context *context) initInput() error {
@@ -107,7 +118,9 @@ func (context *context) initInput() error {
 func (context *context) runQueue() {
 	runtime.LockOSThread()
 	defer runtime.UnlockOSThread()
-	context.queue.Run()
+	context.log("Starting queue...")
+	context.RenderQueue.Run()
+	context.log("Queue done...")
 }
 
 func (context *context) runApp() {
@@ -119,11 +132,13 @@ func (context *context) runApp() {
 		context.log("Application start")
 		for context.Window.IsOpen() {
 			context.update()
-			context.queue.Exec(context.render)
+			context.RenderQueue.Exec(func() error {
+				context.render()
+				return nil
+			})
 		}
 		context.log("Application done")
 	}
-	context.queue.Break()
 }
 
 func (context *context) render() {

@@ -42,7 +42,7 @@ type swapableWindow interface {
 }
 
 func (*renderer) Dispose() {
-
+	return;
 }
 
 func (renderer *renderer) Begin() {
