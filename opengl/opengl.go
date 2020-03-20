@@ -38,7 +38,9 @@ func initGraphics(api *graal.Api, wnd graal.Window) error {
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.Enable(gl.TEXTURE_2D)
 			gl.Enable(gl.DEPTH_TEST)
+			gl.Enable(gl.BLEND)
 			gl.DepthFunc(gl.LESS)
+			gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 			// gl.Disable(gl.CULL_FACE)
 			api.Logf(api, "Initialized OpenGl %s\n", gl.GoStr(gl.GetString(gl.VERSION)))
 		}

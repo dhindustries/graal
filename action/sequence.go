@@ -24,6 +24,9 @@ func (action *Sequence) Add(task Action) {
 func (action *Sequence) Run(t interface{}, dt time.Duration) bool {
 	action.l.Lock()
 	defer action.l.Unlock()
+	if action.d == nil || len(action.d) == 0 {
+		return true
+	}
 	if action.i >= len(action.d) {
 		action.i = 0
 	}
