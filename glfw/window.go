@@ -1,106 +1,97 @@
 package glfw
 
 import (
-	"fmt"
 	"sync"
+
+	"github.com/dhindustries/graal"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
-var windowCounter uint = 0
-var windowCounterLock sync.Mutex
-
 type Window struct {
-	Title         string
-	Width, Height uint
-	Handle        *glfw.Window
-	lock          sync.Mutex
+	Window *glfw.Window
+	api    *graal.Api
+	l      sync.Mutex
 }
 
-func glfwInitialize() {
-	windowCounterLock.Lock()
-	defer windowCounterLock.Unlock()
-	if windowCounter == 0 {
-		glfw.Init()
+func newWindow(api *graal.Api) (graal.Window, error) {
+	cres := make(chan graal.Window)
+	cerr := make(chan error)
+	defer close(cres)
+	defer close(cerr)
+	api.Schedule(func() {
+		glfwInit()
+		glfw.WindowHint(glfw.Visible, glfw.False)
+		glfw.WindowHint(glfw.Resizable, glfw.False)
+		glfw.WindowHint(glfw.ContextVersionMajor, 4)
+		glfw.WindowHint(glfw.ContextVersionMinor, 3)
+		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
+		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
+		w, err := glfw.CreateWindow(800, 600, "Graal", nil, nil)
+		if err != nil {
+			glfwFinit()
+			cerr <- err
+		} else {
+			w.MakeContextCurrent()
+			cres <- &Window{Window: w, api: api}
+		}
+	})
+	select {
+	case res := <-cres:
+		return res, nil
+	case err := <-cerr:
+		return nil, err
 	}
-	windowCounter++
 }
 
-func glfwTerminate() {
-	windowCounterLock.Lock()
-	defer windowCounterLock.Unlock()
-	if windowCounter == 1 {
-		glfw.Terminate()
-	}
-	windowCounter--
-}
-
-func NewWindow(width, height uint, title string) *Window {
-	w := &Window{}
-	w.Width = width
-	w.Height = height
-	w.Title = title
-	return w
-}
-
-func (window *Window) Open() error {
-	var err error
-	window.lock.Lock()
-	defer window.lock.Unlock()
-	if window.Handle != nil {
-		return fmt.Errorf("Window is already open")
-	}
-	glfwInitialize()
-	window.Handle, err = glfw.CreateWindow(int(window.Width), int(window.Height), window.Title, nil, nil)
-	if err != nil {
-		glfwTerminate()
-		return err
-	}
-	window.Handle.MakeContextCurrent()
-	window.Handle.Show()
-
+func (wnd *Window) Open() error {
+	wnd.l.Lock()
+	defer wnd.l.Unlock()
+	wnd.api.Invoke(func() {
+		wnd.Window.Show()
+	})
 	return nil
 }
 
-func (window *Window) Close() {
-	window.lock.Lock()
-	defer window.lock.Unlock()
-	if window.Handle != nil {
-		window.Handle.SetShouldClose(true)
-	}
+func (wnd *Window) Close() {
+	wnd.l.Lock()
+	defer wnd.l.Unlock()
+	wnd.api.Invoke(func() {
+		wnd.Window.SetShouldClose(true)
+		wnd.Window.Hide()
+	})
 }
 
-func (window *Window) Dispose() {
-	window.lock.Lock()
-	defer window.lock.Unlock()
-	if window.Handle == nil {
-		panic(fmt.Errorf("Cannot dispose window: window is not created"))
-	}
-	window.Handle.Destroy()
-	glfwTerminate()
+func (wnd *Window) Dispose() {
+	wnd.l.Lock()
+	defer wnd.l.Unlock()
+	wnd.api.Invoke(func() {
+		wnd.Window.Destroy()
+		glfwFinit()
+	})
 }
 
-func (window *Window) IsOpen() bool {
-	window.lock.Lock()
-	defer window.lock.Unlock()
-
-	return window.Handle != nil && !window.Handle.ShouldClose()
+func (wnd *Window) IsOpen() bool {
+	wnd.l.Lock()
+	defer wnd.l.Unlock()
+	res := make(chan bool)
+	defer close(res)
+	wnd.api.Schedule(func() {
+		res <- !wnd.Window.ShouldClose()
+	})
+	return <-res
 }
 
-func (window *Window) PullMessages() {
-	window.lock.Lock()
-	defer window.lock.Unlock()
-
-	if window.Handle != nil {
+func (wnd *Window) PullMessages() {
+	wnd.l.Lock()
+	defer wnd.l.Unlock()
+	wnd.api.Invoke(func() {
 		glfw.PollEvents()
-	}
+	})
 }
 
-func (window *Window) Swap() {
-	window.lock.Lock()
-	defer window.lock.Unlock()
-
-	if window.Handle != nil {
-		window.Handle.SwapBuffers()
-	}
+func (wnd *Window) Swap() {
+	wnd.api.Schedule(func() {
+		wnd.Window.SwapBuffers()
+	})
 }

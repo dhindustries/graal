@@ -1,13 +1,48 @@
 package graal
 
-type ShaderType = uint
+type ShaderType = string
 
 const (
-	ShaderTypeVertex   = ShaderType(1)
-	ShaderTypeFragment = ShaderType(2)
+	ShaderTypeVertex   = ShaderType("vertex")
+	ShaderTypeFragment = ShaderType("fragment")
 )
 
-type Shader interface {
+type baseShader interface {
 	Type() ShaderType
-	SetMatrix4x4(name string, matrix Mat4x4)
+}
+
+type baseVertexShader interface {
+}
+
+type baseFragmentShader interface {
+}
+
+type Shader interface {
+	Handle
+	baseShader
+}
+
+type ShaderResource interface {
+	Resource
+	baseShader
+}
+
+type VertexShader interface {
+	Shader
+	baseVertexShader
+}
+
+type FragmentShader interface {
+	Shader
+	baseFragmentShader
+}
+
+type VertexShaderResource interface {
+	ShaderResource
+	baseVertexShader
+}
+
+type FragmentShaderResource interface {
+	ShaderResource
+	baseFragmentShader
 }

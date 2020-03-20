@@ -1,22 +1,24 @@
 package graal
 
-import "fmt"
+type TextureMode string
+
+const (
+	TextureModeSharp  = TextureMode("sharp")
+	TextureModeSmooth = TextureMode("smooth")
+)
+
+type baseTexture interface {
+	Draw(img Image) error
+	SetMode(mode TextureMode)
+	Size() (w, h uint)
+}
 
 type Texture interface {
 	Handle
-	Disposable
+	baseTexture
 }
 
-const MimeTextureImage = Mime("texture/image")
-
-func (resources Resources) LoadTexture(path string) (Texture, error) {
-	res, err := resources.Load(MimeTextureImage, path)
-	if err != nil {
-		return nil, err
-	}
-	if tex, ok := res.(Texture); ok {
-		return tex, nil
-	}
-	res.Release()
-	return nil, fmt.Errorf("Resource %s is not a texture", path)
+type TextureResource interface {
+	Resource
+	baseTexture
 }

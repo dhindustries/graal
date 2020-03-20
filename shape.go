@@ -1,9 +1,10 @@
 package graal
 
 type Shape interface {
-	Disposable
+	Handle
 	Texture() Texture
 	SetTexture(texture Texture)
-	Color() Color
-	SetColor(color Color)
+	Mesh() Mesh
+	// Color() Color
+	// SetColor(color Color)
 }

@@ -64,7 +64,24 @@ func (queue *Queue) Push(task func()) {
 	}
 }
 
-func (queue *Queue) Exec(task func() error) error {
+func (queue *Queue) Invoke(task func()) {
+	result := make(chan interface{}, 1)
+	queue.Push(func() {
+		task()
+		result <- true
+	})
+	<-result
+}
+
+func (queue *Queue) Exec(task func() interface{}) interface{} {
+	result := make(chan interface{}, 1)
+	queue.Push(func() {
+		result <- task()
+	})
+	return <-result
+}
+
+func (queue *Queue) TryExec(task func() error) error {
 	result := make(chan error, 1)
 	queue.Push(func() {
 		result <- task()

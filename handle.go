@@ -1,44 +1,27 @@
 package graal
 
-import "sync"
-
 type Handle interface {
 	Acquire()
 	Release()
-	Valid() bool
+	IsValid() bool
 }
 
-type BaseHandle struct {
-	lock    sync.Mutex
-	counter uint
-	invalid bool
+type acquirer interface {
+	Acquire()
 }
 
-func (handle *BaseHandle) Acquire() {
-	handle.lock.Lock()
-	defer handle.lock.Unlock()
-	if handle.invalid {
-		panic("Acquire invalid handle")
-	}
-	handle.counter++
+type releaser interface {
+	Release()
 }
 
-func (handle *BaseHandle) Release() {
-	handle.lock.Lock()
-	defer handle.lock.Unlock()
-	if handle.invalid {
-		panic("Release invalid handle")
-	}
-	if handle.counter > 0 {
-		handle.counter--
-	}
-	if handle.counter == 0 {
-		handle.invalid = true
+func Acquire(v interface{}) {
+	if v, ok := v.(acquirer); ok {
+		v.Acquire()
 	}
 }
 
-func (handle *BaseHandle) Valid() bool {
-	handle.lock.Lock()
-	defer handle.lock.Unlock()
-	return !handle.invalid
+func Release(v interface{}) {
+	if v, ok := v.(releaser); ok {
+		v.Release()
+	}
 }

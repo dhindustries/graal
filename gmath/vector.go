@@ -1,4 +1,4 @@
-package graal
+package gmath
 
 import (
 	"github.com/go-gl/mathgl/mgl32"

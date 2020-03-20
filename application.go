@@ -1,90 +1,72 @@
 package graal
 
-import (
-	"fmt"
-)
-
-type appSetup interface {
-	Setup(engine Engine) error
+type WindowApplication struct {
+	api *Api
+	wnd Window
 }
 
-type appDispose interface {
-	Dispose()
+type Application struct {
+	WindowApplication
+	kb Keyboard
+	rs Resources
+	rn Renderer
+	fc Factory
+	ms Mouse
 }
 
-type appUpdate interface {
-	Update(dt float32)
-}
-
-type appRender interface {
-	Render()
-}
-
-type appPrepare interface {
-	Prepare()
-}
-
-type BaseApplication struct {
-	engine Engine
-}
-
-func (app *BaseApplication) Setup(engine Engine) error {
-	app.engine = engine
+func (app *WindowApplication) init(ctx *context) error {
+	app.api = &ctx.api
+	app.wnd = ctx.wnd
 	return nil
 }
 
-func (app *BaseApplication) Resources() *Resources {
-	if app.engine.ResourceManager == nil {
-		app.Log("ResourceManager is not set")
-		return nil
+func (app *WindowApplication) Window() Window {
+	return app.wnd
+}
+
+func (app *WindowApplication) Close() {
+	app.wnd.Close()
+}
+
+func (app *WindowApplication) Log(v interface{}) {
+	app.api.Logf(app.api, "%v\n", v)
+}
+
+func (app *WindowApplication) Logf(fmt string, v ...interface{}) {
+	app.api.Logf(app.api, "%v\n", v)
+}
+
+func (app *Application) Keyboard() Keyboard {
+	if app.kb == nil {
+		app.kb = &apiKeyboard{app.api}
 	}
-	return &Resources{app.engine.ResourceManager}
+	return app.kb
 }
 
-func (app *BaseApplication) Factory() Factory {
-	factory, err := app.engine.Graphics.Factory()
-	if err != nil {
-		app.Logf("Cannot access graphics factory: %s", err)
+func (app *Application) Resources() Resources {
+	if app.rs == nil {
+		app.rs = &apiResources{app.api}
 	}
-	return factory
+	return app.rs
 }
 
-func (app *BaseApplication) Keyboard() Keyboard {
-	if app.engine.Input != nil {
-		keyboard, err := app.engine.Input.Keyboard()
-		if err != nil {
-			app.Log(fmt.Errorf("Cannot access keyboard: %s", err))
-		}
-		return keyboard
+func (app *Application) Renderer() Renderer {
+	if app.rn == nil {
+		app.rn = &apiRenderer{app.api}
 	}
-	app.Log(fmt.Errorf("Input is not set"))
-	return nil
+	return app.rn
 }
 
-func (app *BaseApplication) Window() Window {
-	return app.engine.Window
-}
-
-func (app *BaseApplication) Renderer() Renderer {
-	renderer, err := app.engine.Graphics.Renderer()
-	if err != nil {
-		app.Logf("Cannot access renderer: %s", err)
+func (app *Application) Factory() Factory {
+	if app.fc == nil {
+		app.fc = &apiFactory{app.api}
 	}
-	return renderer
+	return app.fc
 }
 
-func (app *BaseApplication) Close() {
-	app.engine.Window.Close()
-}
-
-func (app *BaseApplication) Log(v interface{}) {
-	if app.engine.Logger != nil {
-		app.engine.Logger.Println(v)
+func (app *Application) Mouse() Mouse {
+	if app.ms == nil {
+		app.ms = &apiMouse{app.api}
 	}
-}
-
-func (app *BaseApplication) Logf(fmt string, v ...interface{}) {
-	if app.engine.Logger != nil {
-		app.engine.Logger.Printf(fmt, v...)
-	}
+	return app.ms
 }

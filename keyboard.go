@@ -135,3 +135,23 @@ type Keyboard interface {
 	IsPressed(key Key) bool
 	IsReleased(key Key) bool
 }
+
+type apiKeyboard struct {
+	api *Api
+}
+
+func (kb *apiKeyboard) IsUp(key Key) bool {
+	return kb.api.IsKeyUp(kb.api, key)
+}
+
+func (kb *apiKeyboard) IsDown(key Key) bool {
+	return kb.api.IsKeyDown(kb.api, key)
+}
+
+func (kb *apiKeyboard) IsPressed(key Key) bool {
+	return kb.api.IsKeyPressed(kb.api, key)
+}
+
+func (kb *apiKeyboard) IsReleased(key Key) bool {
+	return kb.api.IsKeyReleased(kb.api, key)
+}
