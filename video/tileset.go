@@ -6,7 +6,7 @@ import (
 	"github.com/dhindustries/graal/memory"
 
 	"github.com/dhindustries/graal"
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 type tileset struct {
@@ -16,7 +16,7 @@ type tileset struct {
 	l    sync.RWMutex
 }
 
-func (ts *tileset) Size() (w, h uint) {
+func (ts *tileset) Dimmensions() (w, h uint) {
 	ts.l.RLock()
 	defer ts.l.RUnlock()
 	if ts.tex != nil && ts.w > 0 && ts.h > 0 {
@@ -57,19 +57,19 @@ func (ts *tileset) SetTexture(v graal.Texture) {
 	ts.tex = v
 }
 
-func (ts *tileset) GetTexCoords(id uint) (mgl32.Vec2, mgl32.Vec2) {
-	w, h := ts.Size()
+func (ts *tileset) GetTexCoords(id uint) (mgl64.Vec2, mgl64.Vec2) {
+	w, h := ts.Dimmensions()
 	if w == 0 || h == 0 {
-		return mgl32.Vec2{}, mgl32.Vec2{1, 1}
+		return mgl64.Vec2{}, mgl64.Vec2{1, 1}
 	}
 	if id >= w*h {
 		id = 0
 	}
-	iw := 1.0 / float32(w)
-	ih := 1.0 / float32(h)
-	x := float32(id%w) * iw
-	y := float32(id/w) * ih
-	return mgl32.Vec2{x, y}, mgl32.Vec2{x + iw, y + ih}
+	iw := 1.0 / float64(w)
+	ih := 1.0 / float64(h)
+	x := float64(id%w) * iw
+	y := float64(id/w) * ih
+	return mgl64.Vec2{x, y}, mgl64.Vec2{x + iw, y + ih}
 }
 
 func (ts *tileset) Dispose() {

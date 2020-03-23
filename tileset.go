@@ -1,16 +1,14 @@
 package graal
 
-import (
-	"github.com/go-gl/mathgl/mgl32"
-)
+import "github.com/go-gl/mathgl/mgl64"
 
 type baseTileset interface {
-	Size() (w, h uint)
+	Dimmensions() (w, h uint)
 	TileSize() (w, h uint)
 	SetTileSize(w, h uint)
 	Texture() Texture
 	SetTexture(v Texture)
-	GetTexCoords(tileID uint) (leftTop, bottomRight mgl32.Vec2)
+	GetTexCoords(tileID uint) (leftTop, bottomRight mgl64.Vec2)
 }
 
 type Tileset interface {
@@ -18,7 +16,9 @@ type Tileset interface {
 	baseTileset
 }
 
-type TilesetResource interface {
-	Resource
+type MultiTileset interface {
+	Handle
 	baseTileset
+	TileTexture(tileID uint) Texture
+	SetTileTexture(tileID uint, v Texture)
 }

@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/dhindustries/graal/utils"
+
 	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 
 	"github.com/dhindustries/graal"
 	"github.com/dhindustries/graal/memory"
@@ -161,19 +164,23 @@ func loadProgramResource(api *graal.Api, r graal.Resource) (graal.Resource, erro
 	return prog, nil
 }
 
-func (m *renderer) setModel(api *graal.Api, v mgl32.Mat4) {
-	m.setMat4f(api, "model", v)
+func (m *renderer) setModel(api *graal.Api, v mgl64.Mat4) {
+	m.setMat4d(api, "model", v)
 }
 
-func (m *renderer) setView(api *graal.Api, v mgl32.Mat4) {
-	m.setMat4f(api, "view", v)
+func (m *renderer) setView(api *graal.Api, v mgl64.Mat4) {
+	m.setMat4d(api, "view", v)
 }
 
-func (m *renderer) setProjection(api *graal.Api, v mgl32.Mat4) {
-	m.setMat4f(api, "projection", v)
+func (m *renderer) setProjection(api *graal.Api, v mgl64.Mat4) {
+	m.setMat4d(api, "projection", v)
 }
 
-func (m *renderer) setMat4f(api *graal.Api, name string, v mgl32.Mat4) {
+func (m *renderer) setColor(api *graal.Api, v graal.Color) {
+	m.setVec4d(api, "color", mgl64.Vec4(v))
+}
+
+func (m *renderer) setMat4d(api *graal.Api, name string, v mgl64.Mat4) {
 	var id uint32
 	switch p := m.prog.(type) {
 	case *program:
@@ -182,7 +189,20 @@ func (m *renderer) setMat4f(api *graal.Api, name string, v mgl32.Mat4) {
 		id = p.id
 	}
 	if id != 0 {
-		setMat4f(api, id, name, v)
+		setMat4f(api, id, name, utils.TruncMat4(v))
+	}
+}
+
+func (m *renderer) setVec4d(api *graal.Api, name string, v mgl64.Vec4) {
+	var id uint32
+	switch p := m.prog.(type) {
+	case *program:
+		id = p.id
+	case *programResource:
+		id = p.id
+	}
+	if id != 0 {
+		setVec4f(api, id, name, utils.TruncVec4(v))
 	}
 }
 
@@ -238,9 +258,23 @@ func setMat4f(api *graal.Api, pid uint32, name string, val mgl32.Mat4) {
 	})
 }
 
+func setMat4d(api *graal.Api, pid uint32, name string, val mgl64.Mat4) {
+	api.Invoke(func() {
+		loc := gl.GetUniformLocation(pid, gl.Str(name+"\x00"))
+		gl.UniformMatrix4dv(loc, 1, false, &val[0])
+	})
+}
+
 func setVec4f(api *graal.Api, pid uint32, name string, val mgl32.Vec4) {
 	api.Invoke(func() {
 		loc := gl.GetUniformLocation(pid, gl.Str(name+"\x00"))
 		gl.Uniform4fv(loc, 1, &val[0])
+	})
+}
+
+func setVec4d(api *graal.Api, pid uint32, name string, val mgl64.Vec4) {
+	api.Invoke(func() {
+		loc := gl.GetUniformLocation(pid, gl.Str(name+"\x00"))
+		gl.Uniform4dv(loc, 1, &val[0])
 	})
 }

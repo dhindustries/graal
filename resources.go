@@ -11,6 +11,7 @@ type Resource interface {
 
 type Resources interface {
 	Load(mime Mime, name string) (Resource, error)
+	LoadPrefab(name string) (Prefab, error)
 	LoadFile(name string) (File, error)
 	LoadImage(name string) (ImageResource, error)
 	LoadTexture(name string) (TextureResource, error)
@@ -26,6 +27,9 @@ type apiResources struct {
 
 func (res *apiResources) Load(mime Mime, name string) (Resource, error) {
 	return res.api.LoadResource(res.api, mime, name)
+}
+func (res *apiResources) LoadPrefab(name string) (Prefab, error) {
+	return res.api.LoadPrefab(res.api, name)
 }
 
 func (res *apiResources) LoadFile(name string) (File, error) {

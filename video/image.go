@@ -93,10 +93,10 @@ func loadImageResource(api *graal.Api, r graal.Resource) (graal.Resource, error)
 			ax := uint(x - bounds.Min.X)
 			r, g, b, a := img.At(x, y).RGBA()
 			data[ay*w+ax] = graal.Color{
-				float32(r) / 65535.0,
-				float32(g) / 65535.0,
-				float32(b) / 65535.0,
-				float32(a) / 65535.0,
+				float64(r) / 65535.0,
+				float64(g) / 65535.0,
+				float64(b) / 65535.0,
+				float64(a) / 65535.0,
 			}
 		}
 	}

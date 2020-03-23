@@ -23,10 +23,6 @@ func newWindow(api *graal.Api) (graal.Window, error) {
 		glfwInit()
 		glfw.WindowHint(glfw.Visible, glfw.False)
 		glfw.WindowHint(glfw.Resizable, glfw.False)
-		glfw.WindowHint(glfw.ContextVersionMajor, 4)
-		glfw.WindowHint(glfw.ContextVersionMinor, 3)
-		glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
-		glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 		w, err := glfw.CreateWindow(800, 600, "Graal", nil, nil)
 		if err != nil {
 			glfwFinit()

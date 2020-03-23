@@ -26,6 +26,7 @@ func (Provider) Provide(api *graal.Api) error {
 	api.NewResource = rm.newResource
 	api.LoadResource = rm.loadResource
 	api.SetResourceLoader = rm.setLoader
+	api.GetRelativePath = relativePath
 	api.LoadFile = loadFile
 	return nil
 }

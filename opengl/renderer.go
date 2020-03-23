@@ -1,9 +1,11 @@
 package opengl
 
 import (
+	"sync"
+
 	"github.com/dhindustries/graal"
 	"github.com/go-gl/gl/v4.6-core/gl"
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 type renderer struct {
@@ -15,7 +17,7 @@ type renderer struct {
 
 type renderItem struct {
 	V interface{}
-	T mgl32.Mat4
+	T mgl64.Mat4
 }
 
 type swapper interface {
@@ -30,12 +32,16 @@ type meshed interface {
 	Mesh() graal.Mesh
 }
 
+type colored interface {
+	Color() graal.Color
+}
+
 type shaped interface {
 	Shape() graal.Shape
 }
 
 type transformed interface {
-	Transform() mgl32.Mat4
+	Transform() mgl64.Mat4
 }
 
 func (r *renderer) commit(org *graal.Api) {
@@ -54,33 +60,44 @@ func (r *renderer) commit(org *graal.Api) {
 func (r *renderer) render(api *graal.Api) {
 	r.q.l.Lock()
 	defer r.q.l.Unlock()
-	r.begin(api)
-	if r.q.d != nil {
+	if r.q.d != nil && len(r.q.d) > 0 {
+		r.begin(api)
 		for _, i := range r.q.d {
 			switch cmd := i.(type) {
 			case meshRenderCommand:
 				r.setModel(api, cmd.Transform)
+				r.setColor(api, cmd.Color)
 				bindTexture(api, cmd.Texture)
 				renderMesh(api, cmd.Mesh)
 			}
 		}
 		r.q.d = make([]interface{}, 0)
+		r.end(api)
 	}
-	r.end(api)
 }
 
-func (r *renderer) enqueue(api *graal.Api, elem interface{}, t mgl32.Mat4) {
+func (r *renderer) enqueue(api *graal.Api, elem interface{}, t mgl64.Mat4) {
+	var wg sync.WaitGroup
+	defer wg.Wait()
 	if node, ok := elem.(graal.Node); ok {
 		tf := t.Mul4(node.Transform())
 		for _, child := range node.List() {
-			api.RenderEnqueue(api, child, tf)
+			wg.Add(1)
+			func(child interface{}, t mgl64.Mat4) {
+				api.RenderEnqueue(api, child, t)
+				wg.Done()
+			}(child, tf)
 		}
 	} else if obj, ok := elem.(transformed); ok {
 		t = t.Mul4(obj.Transform())
 	}
 	var tex graal.Texture
+	color := graal.ColorWhite
 	if v, ok := elem.(textured); ok {
 		tex = v.Texture()
+	}
+	if v, ok := elem.(colored); ok {
+		color = v.Color()
 	}
 	if v, ok := elem.(meshed); ok {
 		elem = v.Mesh()
@@ -91,8 +108,10 @@ func (r *renderer) enqueue(api *graal.Api, elem interface{}, t mgl32.Mat4) {
 			Mesh:      v,
 			Texture:   tex,
 			Transform: t,
+			Color:     color,
 		})
 	}
+
 }
 
 func (r *renderer) finit(api *graal.Api) {
@@ -116,8 +135,8 @@ func (r *renderer) begin(api *graal.Api) {
 			r.setView(api, r.cam.View())
 			r.setProjection(api, r.cam.Projection())
 		} else {
-			r.setView(api, mgl32.Ident4())
-			r.setProjection(api, mgl32.Ident4())
+			r.setView(api, mgl64.Ident4())
+			r.setProjection(api, mgl64.Ident4())
 		}
 	}
 }

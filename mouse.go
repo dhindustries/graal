@@ -2,7 +2,7 @@ package graal
 
 import (
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 type MouseButton = glfw.MouseButton
@@ -17,7 +17,7 @@ type Mouse interface {
 	IsUp(button MouseButton) bool
 	IsPressed(button MouseButton) bool
 	IsReleased(button MouseButton) bool
-	Cursor() mgl32.Vec2
+	Cursor() mgl64.Vec2
 }
 
 type apiMouse struct {
@@ -43,6 +43,6 @@ func (m *apiMouse) IsReleased(b MouseButton) bool {
 
 }
 
-func (m *apiMouse) Cursor() mgl32.Vec2 {
+func (m *apiMouse) Cursor() mgl64.Vec2 {
 	return m.api.GetCursorPosition(m.api)
 }

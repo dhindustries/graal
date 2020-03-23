@@ -1,25 +1,25 @@
 package graal
 
-import "github.com/go-gl/mathgl/mgl32"
+import "github.com/go-gl/mathgl/mgl64"
 
 type Camera interface {
 	Handle
-	View() mgl32.Mat4
-	Projection() mgl32.Mat4
-	Position() mgl32.Vec3
-	SetPosition(pos mgl32.Vec3)
-	LookAt() mgl32.Vec3
-	SetLookAt(pos mgl32.Vec3)
-	Up() mgl32.Vec3
-	SetUp(pos mgl32.Vec3)
-	Far() float32
-	SetFar(far float32)
-	Near() float32
-	SetNear(near float32)
+	View() mgl64.Mat4
+	Projection() mgl64.Mat4
+	Position() mgl64.Vec3
+	SetPosition(pos mgl64.Vec3)
+	LookAt() mgl64.Vec3
+	SetLookAt(pos mgl64.Vec3)
+	Up() mgl64.Vec3
+	SetUp(pos mgl64.Vec3)
+	Far() float64
+	SetFar(far float64)
+	Near() float64
+	SetNear(near float64)
 }
 
 type OrthoCamera interface {
 	Camera
-	Viewport() (left, right, top, bottom float32)
-	SetViewport(left, top, right, bottom float32)
+	Viewport() (left, right, top, bottom float64)
+	SetViewport(left, top, right, bottom float64)
 }

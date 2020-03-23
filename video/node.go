@@ -3,7 +3,7 @@ package video
 import (
 	"sync"
 
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 
 	"github.com/dhindustries/graal/components"
 
@@ -27,7 +27,7 @@ func newNode(api *graal.Api) (graal.Node, error) {
 		c:      make([]interface{}, 0),
 		api:    api,
 	}
-	n.SetScale(mgl32.Vec3{1, 1, 1})
+	n.SetScale(mgl64.Vec3{1, 1, 1})
 	api.Handle(api, n)
 	return n, nil
 }

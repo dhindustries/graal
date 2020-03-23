@@ -4,11 +4,14 @@ import (
 	"sync"
 	"unsafe"
 
+	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
+
 	"github.com/dhindustries/graal/memory"
+	"github.com/dhindustries/graal/utils"
 
 	"github.com/dhindustries/graal"
 	"github.com/go-gl/gl/v4.6-core/gl"
-	"github.com/go-gl/mathgl/mgl32"
 )
 
 const (
@@ -46,7 +49,8 @@ type meshAttributes struct {
 type meshRenderCommand struct {
 	graal.Mesh
 	graal.Texture
-	Transform mgl32.Mat4
+	graal.Color
+	Transform mgl64.Mat4
 }
 
 func (m *mesh) SetVertexes(v []graal.Vertex) {
@@ -172,14 +176,15 @@ func buildMesh(api *graal.Api, vao uint32, vba [4]uint32, vx []graal.Vertex) {
 			norm: true, data: gl.Ptr(cd),
 		},
 	}
+
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		for i, v := range vx {
-			pd[i] = v.Position
-			nd[i] = v.Normal
-			td[i] = v.TexCoords
-			cd[i] = v.Color
+			pd[i] = utils.TruncVec3(v.Position)
+			nd[i] = utils.TruncVec3(v.Normal)
+			td[i] = utils.TruncVec2(v.TexCoords)
+			cd[i] = utils.TruncVec4(v.Color)
 		}
 		wg.Done()
 	}()

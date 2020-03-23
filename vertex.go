@@ -1,10 +1,10 @@
 package graal
 
-import "github.com/go-gl/mathgl/mgl32"
+import "github.com/go-gl/mathgl/mgl64"
 
 type Vertex struct {
-	Position  mgl32.Vec3
-	Normal    mgl32.Vec3
-	TexCoords mgl32.Vec2
-	Color     mgl32.Vec4
+	Position  mgl64.Vec3
+	Normal    mgl64.Vec3
+	TexCoords mgl64.Vec2
+	Color     mgl64.Vec4
 }

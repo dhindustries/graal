@@ -3,7 +3,10 @@ package opengl
 import (
 	"github.com/dhindustries/graal"
 	"github.com/dhindustries/graal/memory"
+	"github.com/dhindustries/graal/utils"
 	"github.com/go-gl/gl/v4.6-core/gl"
+	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 type texture struct {
@@ -124,33 +127,16 @@ func fillTexture(api *graal.Api, id uint32, w, h uint, data []graal.Color) {
 	api.Invoke(func() {
 		gl.BindTexture(gl.TEXTURE_2D, id)
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
+		data := colorBits32(data)
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(w), int32(h), 0, gl.RGBA, gl.FLOAT, gl.Ptr(data))
 		gl.GenerateMipmap(gl.TEXTURE_2D)
 	})
 }
 
-func (m *renderer) pushTexture(t graal.Texture) {
-	var id uint32
-	switch v := t.(type) {
-	case *texture:
-		id = v.id
-	case *textureResource:
-		id = v.id
+func colorBits32(data []graal.Color) []mgl32.Vec4 {
+	r := make([]mgl32.Vec4, len(data))
+	for i, v := range data {
+		r[i] = utils.TruncVec4(mgl64.Vec4(v))
 	}
-	gl.BindTexture(gl.TEXTURE_2D, id)
-	// if m.textureStack != nil {
-	// 	m.textureStack.push(id)
-	// }
-}
-
-func (m *renderer) popTexture(n int) {
-	// if m.textureStack != nil {
-	// 	gl.BindTexture(gl.TEXTURE_2D, m.textureStack.popn(n))
-	// } else if n > 0 {
-	gl.BindTexture(gl.TEXTURE_2D, 0)
-	// }
-}
-
-func (m *renderer) rebindTexture() {
-	// gl.BindTexture(gl.TEXTURE_2D, m.textureStack.top())
+	return r
 }

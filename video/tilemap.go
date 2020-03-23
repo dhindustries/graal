@@ -4,7 +4,7 @@ import (
 	"sync"
 
 	"github.com/dhindustries/graal/memory"
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 
 	"github.com/dhindustries/graal"
 )
@@ -17,6 +17,7 @@ type tilemap struct {
 	w, h uint
 	d    []uint
 	l    sync.RWMutex
+	p    map[uint]*graal.ParamsWriter
 }
 
 func newTilemap(api *graal.Api) (graal.Tilemap, error) {
@@ -101,6 +102,23 @@ func (tm *tilemap) Tile(x, y uint) uint {
 	return 0
 }
 
+func (tm *tilemap) TileParams(id uint) *graal.ParamsWriter {
+	tm.l.Lock()
+	defer tm.l.Unlock()
+	if id >= uint(len(tm.d)) {
+		return nil
+	}
+	if tm.p == nil {
+		tm.p = make(map[uint]*graal.ParamsWriter)
+	}
+	params, ok := tm.p[id]
+	if !ok {
+		params = new(graal.ParamsWriter)
+		tm.p[id] = params
+	}
+	return params
+}
+
 func (tm *tilemap) Dispose() {
 	memory.Dispose(tm.Handle)
 	tm.SetTileset(nil)
@@ -137,19 +155,19 @@ func (tm *tilemap) buildVertexes() []graal.Vertex {
 				u, v := tm.s.GetTexCoords(id)
 
 				tl := graal.Vertex{
-					Position:  mgl32.Vec3{float32(x), float32(y), 0},
+					Position:  mgl64.Vec3{float64(x), float64(y), 0},
 					TexCoords: u,
 				}
 				tr := graal.Vertex{
-					Position:  mgl32.Vec3{float32(x + 1), float32(y), 0},
-					TexCoords: mgl32.Vec2{v[0], u[1]},
+					Position:  mgl64.Vec3{float64(x + 1), float64(y), 0},
+					TexCoords: mgl64.Vec2{v[0], u[1]},
 				}
 				bl := graal.Vertex{
-					Position:  mgl32.Vec3{float32(x), float32(y + 1), 0},
-					TexCoords: mgl32.Vec2{u[0], v[1]},
+					Position:  mgl64.Vec3{float64(x), float64(y + 1), 0},
+					TexCoords: mgl64.Vec2{u[0], v[1]},
 				}
 				br := graal.Vertex{
-					Position:  mgl32.Vec3{float32(x + 1), float32(y + 1), 0},
+					Position:  mgl64.Vec3{float64(x + 1), float64(y + 1), 0},
 					TexCoords: v,
 				}
 				list = append(

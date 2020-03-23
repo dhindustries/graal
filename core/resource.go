@@ -2,6 +2,7 @@ package core
 
 import (
 	"fmt"
+	"path/filepath"
 	"sync"
 
 	"github.com/dhindustries/graal"
@@ -96,7 +97,7 @@ func newResourceManager() *resourceManager {
 func (manager *resourceManager) loadResource(api *graal.Api, mime graal.Mime, path string) (graal.Resource, error) {
 	ref, ex := manager.reference(api, mime, path)
 	if !ex {
-		l, err := manager.loader(mime)
+		l, err := manager.loader(mime, path)
 		if err != nil {
 			return nil, err
 		}
@@ -183,10 +184,16 @@ func (manager *resourceManager) setLoader(api *graal.Api, mime graal.Mime, loade
 	manager.lo[mime] = loader
 }
 
-func (manager *resourceManager) loader(mime graal.Mime) (resourceLoader, error) {
+func (manager *resourceManager) loader(mime graal.Mime, path string) (resourceLoader, error) {
 	manager.ll.RLock()
 	defer manager.ll.RUnlock()
 	mime = mime.SplitParams()
+	if mime.SubType() == "*" {
+		ext := filepath.Ext(path)
+		if len(ext) > 0 {
+			mime = mime.WithSubType(ext[1:])
+		}
+	}
 	mimes := []graal.Mime{
 		mime,
 		mime.SplitSubType(),
@@ -201,4 +208,11 @@ func (manager *resourceManager) loader(mime graal.Mime) (resourceLoader, error) 
 
 func (manager *resourceManager) log(f string, v ...interface{}) {
 	fmt.Printf(f, v...)
+}
+
+func relativePath(api *graal.Api, res graal.Resource, p string) string {
+	if filepath.IsAbs(p) {
+		return p
+	}
+	return filepath.Join(filepath.Dir(res.Path()), p)
 }

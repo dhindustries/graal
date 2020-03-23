@@ -21,8 +21,26 @@ func (mime Mime) SplitParams() Mime {
 }
 
 func (mime Mime) SplitSubType() Mime {
+	return mime.WithSubType("*")
+}
+
+func (mime Mime) WithSubType(subtype string) Mime {
+	if subtype == "" {
+		subtype = "*"
+	}
 	parts := []string{
-		fmt.Sprintf("%s/*", mime.Type()),
+		fmt.Sprintf("%s/%s", mime.Type(), subtype),
+	}
+	parts = append(parts, mime.params()...)
+	return Mime(strings.Join(parts, ";"))
+}
+
+func (mime Mime) WithType(ty string) Mime {
+	if ty == "" {
+		ty = "*"
+	}
+	parts := []string{
+		fmt.Sprintf("%s/%s", ty, mime.SubType()),
 	}
 	parts = append(parts, mime.params()...)
 	return Mime(strings.Join(parts, ";"))

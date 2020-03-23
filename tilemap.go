@@ -8,6 +8,7 @@ type baseTilemap interface {
 	SetTile(x, y, id uint)
 	Tile(x, y uint) uint
 	Mesh() Mesh
+	TileParams(id uint) *ParamsWriter
 }
 
 type Tilemap interface {

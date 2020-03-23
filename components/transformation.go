@@ -3,7 +3,7 @@ package components
 import (
 	"sync"
 
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 type Transformation struct {
@@ -11,7 +11,7 @@ type Transformation struct {
 	rotation
 	scale
 	origin
-	matrix mgl32.Mat4
+	matrix mgl64.Mat4
 	lock   sync.Mutex
 }
 
@@ -19,15 +19,15 @@ func (object *Transformation) isValid() bool {
 	return object.translation.isValid() && object.rotation.isValid() && object.scale.isValid() && object.origin.isValid()
 }
 
-func (object *Transformation) Transform() mgl32.Mat4 {
+func (object *Transformation) Transform() mgl64.Mat4 {
 	object.lock.Lock()
 	defer object.lock.Unlock()
 	if !object.isValid() {
-		translation := mgl32.Mat4(object.translation.Transform())
-		rotation := mgl32.Mat4(object.rotation.Transform())
-		scale := mgl32.Mat4(object.scale.Transform())
-		origin := mgl32.Mat4(object.origin.Transform())
-		object.matrix = mgl32.Mat4(translation.Mul4(rotation).Mul4(scale).Mul4(origin))
+		translation := object.translation.Transform()
+		rotation := object.rotation.Transform()
+		scale := object.scale.Transform()
+		origin := object.origin.Transform()
+		object.matrix = translation.Mul4(rotation).Mul4(scale).Mul4(origin)
 	}
 	return object.matrix
 }

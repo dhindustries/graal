@@ -11,10 +11,6 @@ type Sequence struct {
 	l sync.RWMutex
 }
 
-func NewSequence() *Sequence {
-	return &Sequence{d: make([]Action, 0)}
-}
-
 func (action *Sequence) Add(task Action) {
 	action.l.Lock()
 	defer action.l.Unlock()

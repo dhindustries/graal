@@ -1,6 +1,6 @@
 package graal
 
-import "github.com/go-gl/mathgl/mgl32"
+import "github.com/go-gl/mathgl/mgl64"
 
 type Node interface {
 	Handle
@@ -8,13 +8,13 @@ type Node interface {
 	Attach(v interface{})
 	Detach(v interface{})
 	List() []interface{}
-	SetOrigin(origin mgl32.Vec3)
-	SetPosition(position mgl32.Vec3)
-	SetRotation(rotation mgl32.Vec3)
-	SetScale(scale mgl32.Vec3)
-	Origin() mgl32.Vec3
-	Position() mgl32.Vec3
-	Rotation() mgl32.Vec3
-	Scale() mgl32.Vec3
-	Transform() mgl32.Mat4
+	SetOrigin(origin mgl64.Vec3)
+	SetPosition(position mgl64.Vec3)
+	SetRotation(rotation mgl64.Vec3)
+	SetScale(scale mgl64.Vec3)
+	Origin() mgl64.Vec3
+	Position() mgl64.Vec3
+	Rotation() mgl64.Vec3
+	Scale() mgl64.Vec3
+	Transform() mgl64.Mat4
 }

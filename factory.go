@@ -1,14 +1,10 @@
 package graal
 
-import (
-	"github.com/dhindustries/graal/gmath"
-)
-
 type Factory interface {
 	Node() (Node, error)
 	Mesh(p []Vertex) (Mesh, error)
 	Texture(w, h uint) (Texture, error)
-	Quad(left, top, right, bottom float32) (Shape, error)
+	Quad(left, top, right, bottom float64) (Shape, error)
 	Program() (Program, error)
 	OrthoCamera() (OrthoCamera, error)
 	Tileset() (Tileset, error)
@@ -19,13 +15,8 @@ type apiFactory struct {
 	api *Api
 }
 
-func (f *apiFactory) Quad(l, t, r, b float32) (Shape, error) {
-	return f.api.NewQuad(f.api, gmath.Rect{
-		Left:   l,
-		Right:  r,
-		Top:    t,
-		Bottom: b,
-	})
+func (f *apiFactory) Quad(l, t, r, b float64) (Shape, error) {
+	return f.api.NewQuad(f.api, l, r, t, b)
 }
 
 func (f *apiFactory) Program() (Program, error) {

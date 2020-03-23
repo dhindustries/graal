@@ -6,12 +6,12 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 
 	"github.com/dhindustries/graal"
-	"github.com/go-gl/mathgl/mgl32"
+	"github.com/go-gl/mathgl/mgl64"
 )
 
 type mouse struct {
 	ps, cs map[graal.MouseButton]bool
-	x, y   float32
+	x, y   float64
 	l      sync.RWMutex
 }
 
@@ -48,19 +48,19 @@ func (m *mouse) isReleased(api *graal.Api, b graal.MouseButton) bool {
 	return !m.cs[b] && m.ps[b]
 }
 
-func (m *mouse) cursor(api *graal.Api) mgl32.Vec2 {
+func (m *mouse) cursor(api *graal.Api) mgl64.Vec2 {
 	m.l.RLock()
 	defer m.l.RUnlock()
 
-	return mgl32.Vec2{m.x, m.y}
+	return mgl64.Vec2{m.x, m.y}
 }
 
 func (m *mouse) handleCursor(w *glfw.Window, xpos float64, ypos float64) {
 	m.l.Lock()
 	defer m.l.Unlock()
 	ww, wh := w.GetSize()
-	m.x = float32(xpos) / float32(ww)
-	m.y = float32(ypos) / float32(wh)
+	m.x = xpos / float64(ww)
+	m.y = ypos / float64(wh)
 }
 
 func (m *mouse) handleButton(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
