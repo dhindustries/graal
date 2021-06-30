@@ -1,0 +1,15 @@
+<tileset>
+    <texture>./tileset.png</texture>
+    <tile-width>16</tile-width>
+    <tile-height>16</tile-height>
+    <tiles>
+        <tile id="1">
+            <obstacle>0</obstacle>
+            <walk-cost>1</walk-cost>
+        </tile>
+        <tile id="3">
+            <obstacle>0</obstacle>
+            <walk-cost>0.5</walk-cost>
+        </tile>
+    </tiles>
+</tileset>

@@ -1,90 +1,35 @@
 package graal
 
-import (
-	"sync"
-)
-
 type Queue struct {
 	tasks chan func()
-	done  chan bool
-	lock  sync.Mutex
 }
 
-func (queue *Queue) init() {
-	queue.lock.Lock()
-	defer queue.lock.Unlock()
-	if queue.tasks == nil {
-		queue.tasks = make(chan func(), 1)
-		queue.done = make(chan bool, 1)
+func (queue *Queue) Start() {
+	if queue.tasks != nil {
+		panic("queue is already started")
+	}
+	queue.tasks = make(chan func(), 8)
+}
+
+func (queue *Queue) Stop() {
+	if queue.tasks != nil {
+		close(queue.tasks)
+		queue.tasks = nil
 	}
 }
 
 func (queue *Queue) Pull() {
-	if queue != nil {
-		queue.init()
-	loop:
-		for true {
-			select {
-			case task := <-queue.tasks:
-				task()
-			default:
-				break loop
-			}
-		}
+	if queue.tasks == nil {
+		panic("queue is not started")
 	}
-}
-
-func (queue *Queue) Run() {
-	if queue != nil {
-		queue.init()
-	loop:
-		for true {
-			select {
-			case task := <-queue.tasks:
-				task()
-			case <-queue.done:
-				break loop
-			}
-		}
-	}
-}
-
-func (queue *Queue) Break() {
-	if queue != nil {
-		queue.done <- true
-	}
-}
-
-func (queue *Queue) Push(task func()) {
-	if queue != nil {
-		queue.init()
-		queue.tasks <- task
-	} else {
+	for task := range queue.tasks {
 		task()
 	}
 }
 
-func (queue *Queue) Invoke(task func()) {
-	result := make(chan interface{}, 1)
-	queue.Push(func() {
-		task()
-		result <- true
-	})
-	<-result
-}
-
-func (queue *Queue) Exec(task func() interface{}) interface{} {
-	result := make(chan interface{}, 1)
-	queue.Push(func() {
-		result <- task()
-	})
-	return <-result
-}
-
-func (queue *Queue) TryExec(task func() error) error {
-	result := make(chan error, 1)
-	queue.Push(func() {
-		result <- task()
-	})
-	return <-result
+func (queue *Queue) Enqueue(fn func()) {
+	if queue.tasks == nil {
+		panic("queue is not started")
+	}
+	queue.tasks <- fn
 }
